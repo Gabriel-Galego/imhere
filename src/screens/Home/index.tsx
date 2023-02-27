@@ -1,14 +1,36 @@
-import { Text, View, TextInput, TouchableOpacity, Button } from "react-native";
+import React, {useState} from "react";
+import { Text, View, TextInput, TouchableOpacity, FlatList, Alert } from "react-native";
 
 import { Participant } from "../../components/Participant";
 
 import { styles } from "./styles";
 
 export function Home(){
+  const [participants, setParticipants] = useState<string[]>([]);
+  const [participantName, setParticipantName] = useState('');
 
   function handleParticipantAdd(){
-    console.log("Adicionar participante");
+    if(participants.includes(participantName)){
+      return Alert.alert("Participante já adicionado", "Já existe um participante na lista com esse nome."); 
+    }
+
+    setParticipants(prevState => [...prevState, participantName]);
+    setParticipantName('');
   }
+
+  function handleParticipantRemove(name: string){
+    Alert.alert("Remove", `Remover o participante ${name}?`, [
+      {
+        text: "Sim",
+        onPress: () => setParticipants(prevState => prevState.filter(participant => participant !== name))
+      },
+      {
+        text: "Não",
+        style: "cancel"
+      }
+    ])
+  }
+
   return(
     <View style={styles.container}>
       <Text style={styles.eventName}>
@@ -23,6 +45,8 @@ export function Home(){
           style={styles.input}
           placeholder="Nome do Participante"
           placeholderTextColor="#6b6b6b"
+          onChangeText={setParticipantName}
+          value={participantName}
         />
 
         <TouchableOpacity style={styles.button} onPress={handleParticipantAdd}>
@@ -32,10 +56,23 @@ export function Home(){
         </TouchableOpacity>
       </View>  
 
-
-      <Participant />
-      <Participant />
-      <Participant />
+      <FlatList 
+        data={participants}
+        keyExtractor={item => item}
+        renderItem={({item}) => (
+          <Participant
+            key={item} 
+            name={item}
+            onRemove={() => handleParticipantRemove(item)}
+          />
+        )}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={() => (
+          <Text style={styles.emptyList}>
+            Nenhum participante adicionado
+          </Text>
+        )}
+      />
     </View>
   )
 }
